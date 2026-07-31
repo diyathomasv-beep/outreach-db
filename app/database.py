@@ -1,35 +1,64 @@
-import sqlite3
+from collections.abc import Generator
 from pathlib import Path
 from typing import Any
+
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+from sqlmodel import Session, SQLModel, create_engine, select
+
+from app.models import CurrentUserResponse, OutreachEvent, User
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DB_PATH = PROJECT_ROOT / "conf" / "db.sqlite"
-DEFAULT_MIGRATIONS_PATH = Path(__file__).resolve().parent / "migrations"
 
 
-def apply_sql_folder(
-    db_path: str | Path = DEFAULT_DB_PATH,
-    folder_path: str | Path = DEFAULT_MIGRATIONS_PATH,
-) -> None:
-    """Apply the project's idempotent SQL migrations in filename order."""
-    database = Path(db_path)
-    migrations = Path(folder_path)
+def create_db_engine(db_path: str | Path = DEFAULT_DB_PATH) -> Engine:
+    database = Path(db_path).resolve()
     database.parent.mkdir(parents=True, exist_ok=True)
+    db_engine = create_engine(
+        f"sqlite:///{database.as_posix()}",
+        connect_args={"check_same_thread": False},
+    )
 
-    sql_files = sorted(migrations.glob("*.sql"))
-    if not sql_files:
-        return
+    @event.listens_for(db_engine, "connect")
+    def enable_foreign_keys(
+        dbapi_connection: Any, _connection_record: Any
+    ) -> None:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
-    with sqlite3.connect(database) as connection:
-        for sql_file in sql_files:
-            connection.executescript(sql_file.read_text(encoding="utf-8"))
+    return db_engine
 
 
-def get_me(uid: int, db_path: str | Path = DEFAULT_DB_PATH) -> dict[str, Any] | None:
-    """Return one user as a mapping, using a short-lived connection per request."""
-    with sqlite3.connect(db_path) as connection:
-        connection.row_factory = sqlite3.Row
-        row = connection.execute("SELECT * FROM users WHERE id = ?", (uid,)).fetchone()
+engine = create_db_engine()
 
-    return dict(row) if row is not None else None
+
+def init_db(db_engine: Engine = engine) -> None:
+    """Create any missing SQLModel tables without modifying existing data."""
+    SQLModel.metadata.create_all(db_engine)
+
+
+def get_session() -> Generator[Session]:
+    with Session(engine) as session:
+        yield session
+
+
+def get_user(session: Session, uid: int) -> CurrentUserResponse | None:
+    """Return public user fields; the password hash is never returned."""
+    user = session.exec(select(User).where(User.id == uid)).first()
+    return CurrentUserResponse.model_validate(user) if user is not None else None
+
+def get_user_from_email(session: Session, email: str) -> User | None:
+    return session.exec(select(User).where(User.email == email)).first()
+
+
+def update_password_hash(session: Session, user: User, password_hash: str) -> None:
+    user.password_argon2 = password_hash
+    session.add(user)
+    session.commit()
+
+
+def get_events(session: Session) -> list[OutreachEvent]:
+    return list(session.exec(select(OutreachEvent)).all())
