@@ -40,5 +40,7 @@
     <title>Outreach DB</title>
 </svelte:head>
 <Toaster richColors/>
-<Navbar />
-{@render children()}
+<div class="min-h-screen bg-gradient-to-br from-yellow-100 via-amber-100 to-orange-200">
+    <Navbar />
+    {@render children()}
+</div>

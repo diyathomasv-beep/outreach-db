@@ -16,7 +16,7 @@
     });
 </script>
 
-<div class="w-full flex flex-row flex-1 min-w-0 h-auto mb-2 border-b border-black p-5 justify-between">
+<div class="w-full flex flex-row flex-1 min-w-0 h-auto mb-2 bg-white p-5 shadow-md justify-between">
     <div class="flex flex-row items-start justify-start gap-5 align-middle">
         <a href="/" class="font-bold text-xl">Outreach DB</a>
         <a class="self-center text-md" href="/map">Map</a>
@@ -31,7 +31,17 @@
             {/if}
             <a href="##" onclick={() => logOut()}>Logout</a>
         {:else}
-            <a href="/login">Login</a>
+            <a href="/login" class="nav-link">Login</a>
         {/if}
     </div>
 </div>
+<style>
+    .nav-link {
+        border-bottom: 2px solid transparent;
+        transition: border-bottom 0.3s ease;
+    }
+
+    .nav-link:hover {
+        border-bottom: 2px solid black;
+    }
+</style>

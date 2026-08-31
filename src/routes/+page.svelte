@@ -26,15 +26,22 @@
 <Seo title="Outreach Opportunities" description="Browse community outreach opportunities." />
 
 <main>
-    <div class="mx-auto my-5 flex max-w-xl flex-col items-center justify-center gap-5">
-        <h1 class="mt-8 mb-8 text-center text-5xl font-bold">
+    <div class="mx-auto my-5 flex max-w-4xl flex-col items-center justify-center gap-5">
+        <p class="text-center mt-12 mb-4text-sm font-extrabold uppercase tracking- [.16em] text-yellow-600">
+            This year's theme:  Buzzing with Bees
+        </p>
+        <h1 class="mt-0 mb-0 whitespace-nowrap text-center text-5xl font-bold">
             Browse Outreach Opportunities
         </h1>
+        
+        <p class="whitespace-nowrap text-center text-lg italic text-slate-500 mb-15">
+            Find outreach opportunities in your area and get involved with your community.
+            </p>
         <div class="flex flex-row gap-3 w-full min-w-0">
-            <Input bind:value={searchbox} placeholder="Search opportunities..."/>
+            <Input bind:value={searchbox} placeholder="Search opportunities by state..."/>
         </div>
         {#if filteredEvents.length > 0}
-            <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
                 {#each filteredEvents as event}
                     <Eventcard event={event} />
                 {/each}

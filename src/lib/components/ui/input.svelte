@@ -4,4 +4,4 @@
     let { value = $bindable(), ...attributes }: HTMLInputAttributes = $props();
 </script>
 
-<input {...attributes} bind:value class={["w-full border-2 border-black p-2", attributes.class]} />
+<input {...attributes} bind:value class={["w-full border-2 border-black p-2 rounded-xl", attributes.class]} />
